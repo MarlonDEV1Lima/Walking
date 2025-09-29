@@ -1,3 +1,4 @@
+# Arquivos de Build
 *.iml
 .gradle
 /local.properties
@@ -13,3 +14,82 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Arquivos sensíveis do Firebase e Google Services
+google-services.json
+**/google-services.json
+*.json
+walking-df5d0-firebase-adminsdk-fbsvc-98ad732c8c.json
+
+# Chaves e configurações sensíveis
+keystore.properties
+*.keystore
+*.jks
+app/release/
+app/debug/
+*.p12
+*.pem
+
+# Logs
+*.log
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Arquivos do Android Studio
+.idea/
+*.iws
+/out/
+
+# Diretórios de build
+build/
+*/build/
+app/build/
+
+# Gradle Wrapper (manter apenas os essenciais)
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# Arquivos NDK
+obj/
+.externalNativeBuild/
+
+# Arquivos do ProGuard
+proguard/
+
+# Arquivos do Fabric
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+
+# Cache de dependências
+.gradle/
+gradle-app.setting
+
+# Repository local (se existe)
+/repository
+
+# Arquivos de configuração de IDE
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Arquivos de sistema
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Arquivos de backup
+*.bak
+*.backup
+*~.nib
+
+# Arquivos de configuração local
+check_firebase.sh
+CONFIGURACAO.md
