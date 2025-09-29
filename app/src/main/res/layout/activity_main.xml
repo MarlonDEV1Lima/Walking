@@ -70,15 +70,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Google Maps Fragment (comentado - usando OpenStreetMap gratuito) -->
-    <!--
-    <fragment
-        android:id="@+id/mapFragment"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-    -->
-
     <!-- Card com estatísticas do usuário -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
@@ -179,111 +170,15 @@
 
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Botão "Minha Localização" flutuante -->
+    <!-- Floating Action Button para centralizar na localização do usuário -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabMyLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end|top"
+        android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:layout_marginTop="80dp"
         android:src="@android:drawable/ic_menu_mylocation"
-        android:contentDescription="Minha Localização"
-        app:tint="@android:color/white"
-        app:backgroundTint="@color/walkking_primary" />
-
-    <!-- Botões de ação -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_margin="16dp"
-        android:orientation="horizontal">
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabStartTracking"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:src="@android:drawable/ic_media_play"
-            android:contentDescription="Iniciar Rastreamento"
-            app:tint="@android:color/white" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabLeaderboard"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:src="@android:drawable/star_big_on"
-            android:contentDescription="Ranking"
-            app:tint="@android:color/white" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabHistory"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:src="@android:drawable/ic_menu_recent_history"
-            android:contentDescription="Histórico"
-            app:tint="@android:color/white" />
-
-    </LinearLayout>
-
-    <!-- Menu superior -->
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/design_default_color_primary"
-            app:title="WalkKing"
-            app:titleTextColor="@android:color/white"
-            app:menu="@menu/main_menu" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <!-- Mensagem de boas-vindas -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Bem-vindo ao Walking App!"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginTop="48dp"
-            android:layout_marginBottom="32dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Aqui você poderá acompanhar suas caminhadas e conquistar territórios."
-            android:textSize="16sp"
-            android:gravity="center"
-            android:layout_marginBottom="32dp" />
-
-        <!-- Placeholder para futuras funcionalidades -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Funcionalidades em desenvolvimento..."
-            android:textSize="14sp"
-            android:gravity="center"
-            android:textColor="#666"
-            android:layout_marginTop="48dp" />
-
-    </LinearLayout>
+        android:contentDescription="Minha localização"
+        app:tint="@android:color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

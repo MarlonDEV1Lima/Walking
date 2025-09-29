@@ -9,9 +9,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.msystem.walking" />
-                  <option name="mobileSdkAppId" value="1:107299014895734273188:android:a1b2c3d4e5f6g7h8" />
+                  <option name="mobileSdkAppId" value="1:978414282717:android:10c0fbc1ca19e71b07b834" />
                   <option name="projectId" value="walking-df5d0" />
-                  <option name="projectNumber" value="107299014895734273188" />
+                  <option name="projectNumber" value="978414282717" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

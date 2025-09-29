@@ -61,6 +61,7 @@ dependencies {
     // Lifecycle
     implementation libs.lifecycle.viewmodel
     implementation libs.lifecycle.livedata
+    implementation libs.preference
 
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit

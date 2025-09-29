@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -14,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -32,6 +32,8 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
+
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
@@ -81,7 +83,6 @@ public class MainActivity extends AppCompatActivity {
         // Configurar o mapa com melhor qualidade
         mapView.setTileSource(TileSourceFactory.MAPNIK); // OpenStreetMap padrão
         mapView.setMultiTouchControls(true);
-        mapView.setBuiltInZoomControls(false);
 
         mapController = mapView.getController();
         mapController.setZoom(18.0); // Zoom GPS - bem próximo para navegação
@@ -142,8 +143,8 @@ public class MainActivity extends AppCompatActivity {
         userMarker.setIcon(ContextCompat.getDrawable(this, R.drawable.ic_location_user));
         userMarker.setTitle("📍 Minha Localização");
 
-        // Informações detalhadas do GPS
-        String snippet = String.format(
+        // Informações detalhadas do GPS - usando Locale explícito
+        String snippet = String.format(Locale.getDefault(),
                 "📐 Lat: %.6f\n📐 Lon: %.6f\n🎯 Precisão: %.1fm\n⚡ Velocidade: %.1f km/h",
                 gpsLocation.getLatitude(),
                 gpsLocation.getLongitude(),
@@ -160,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Feedback visual baseado na precisão GPS
         if (accuracy <= 5) {
-            // GPS excelente (≤5m) - sem avisos
+            // GPS excelente (≤5m) - sem avisos necessários
         } else if (accuracy <= 15) {
             // GPS bom (5-15m) - aviso ocasional
             if (Math.random() < 0.1) { // 10% chance de mostrar
@@ -308,17 +309,26 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // Remover atualizações de localização ao pausar a atividade
-        fusedLocationClient.removeLocationUpdates(locationCallback);
+        // Usar o método stopLocationTracking para evitar warning
+        stopLocationTracking();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Limpar recursos e referências
-        mapView.getOverlays().remove(locationOverlay);
-        if (userMarker != null) {
-            mapView.getOverlays().remove(userMarker);
+        // Limpar recursos e referências com verificações de null safety
+        if (mapView != null) {
+            if (locationOverlay != null) {
+                mapView.getOverlays().remove(locationOverlay);
+            }
+            if (userMarker != null) {
+                mapView.getOverlays().remove(userMarker);
+            }
+        }
+
+        // Limpar callback de localização para evitar vazamentos de memória
+        if (fusedLocationClient != null && locationCallback != null) {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
         }
     }
 
@@ -334,5 +344,15 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "❌ Permissão de localização necessária para o funcionamento do app", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    /**
+     * Verifica se a localização tem precisão aceitável
+     * @param location Localização obtida do GPS
+     * @return true se a precisão for menor ou igual a 50 metros
+     */
+    private boolean isLocationAccurate(Location location) {
+        // Considera uma localização precisa se tiver precisão melhor que 50 metros
+        return location.getAccuracy() <= 50.0f;
     }
 }

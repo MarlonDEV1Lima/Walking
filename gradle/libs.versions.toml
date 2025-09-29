@@ -13,6 +13,7 @@ playServicesMaps = "18.2.0"
 playServicesLocation = "21.0.1"
 navigation = "2.7.6"
 lifecycleViewmodel = "2.7.0"
+preference = "1.2.1"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -44,6 +45,7 @@ lifecycle-livedata = { group = "androidx.lifecycle", name = "lifecycle-livedata"
 
 # OpenStreetMap (alternativa gratuita ao Google Maps)
 osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version = "6.1.17" }
+preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
