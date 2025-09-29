@@ -1,3 +1,4 @@
 /build
 /repository
 google-services.json
+*.json
