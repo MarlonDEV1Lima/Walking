@@ -33,6 +33,8 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.util.Locale;
+
 public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
@@ -142,8 +144,8 @@ public class MainActivity extends AppCompatActivity {
         userMarker.setIcon(ContextCompat.getDrawable(this, R.drawable.ic_location_user));
         userMarker.setTitle("📍 Minha Localização");
 
-        // Informações detalhadas do GPS
-        String snippet = String.format(
+        // Informações detalhadas do GPS - corrigir String.format para usar Locale
+        String snippet = String.format(Locale.getDefault(),
                 "📐 Lat: %.6f\n📐 Lon: %.6f\n🎯 Precisão: %.1fm\n⚡ Velocidade: %.1f km/h",
                 gpsLocation.getLatitude(),
                 gpsLocation.getLongitude(),
@@ -160,7 +162,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Feedback visual baseado na precisão GPS
         if (accuracy <= 5) {
-            // GPS excelente (≤5m) - sem avisos
+            // GPS excelente (≤5m) - adicionar comentário para evitar warning
+            // Sem avisos necessários para GPS excelente
         } else if (accuracy <= 15) {
             // GPS bom (5-15m) - aviso ocasional
             if (Math.random() < 0.1) { // 10% chance de mostrar
@@ -202,6 +205,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         try {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                requestLocationPermissions();
+                return;
+            }
             fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
                 if (location != null) {
                     GeoPoint userLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
@@ -255,6 +262,10 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         try {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                requestLocationPermissions();
+                return;
+            }
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, getMainLooper());
 
             // Obter última localização conhecida para inicialização rápida
@@ -334,5 +345,11 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "❌ Permissão de localização necessária para o funcionamento do app", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    // Adicionar método que estava faltando
+    private boolean isLocationAccurate(Location location) {
+        // Considera uma localização precisa se tiver precisão melhor que 50 metros
+        return location.getAccuracy() <= 50.0f;
     }
 }

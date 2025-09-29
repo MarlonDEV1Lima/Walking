@@ -192,6 +192,17 @@
         app:tint="@android:color/white"
         app:backgroundTint="@color/walkking_primary" />
 
+    <!-- Floating Action Button para centralizar na localização do usuário -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabMyLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_location_user"
+        android:contentDescription="Minha localização"
+        app:tint="@android:color/white" />
+
     <!-- Botões de ação -->
     <LinearLayout
         android:layout_width="match_parent"
