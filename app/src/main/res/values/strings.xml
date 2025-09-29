@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">WalkKing</string>
+    <string name="login_title">Bem-vindo ao WalkKing</string>
+    <string name="login_subtitle">Conquiste territórios caminhando!</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Senha</string>
+    <string name="name_hint">Nome completo</string>
+    <string name="login_button">Entrar</string>
+    <string name="register_button">Cadastrar</string>
+    <string name="google_signin">Continuar com Google</string>
+
+    <!-- Tracking Activity -->
+    <string name="start_tracking">Iniciar</string>
+    <string name="pause_tracking">Pausar</string>
+    <string name="resume_tracking">Continuar</string>
+    <string name="finish_activity">Finalizar</string>
+    <string name="distance_label">Distância</string>
+    <string name="points_label">Pontos</string>
+    <string name="time_label">Tempo</string>
+
+    <!-- Main Activity -->
+    <string name="total_points">Pontos</string>
+    <string name="total_distance">Distância</string>
+    <string name="territories_conquered">Territórios</string>
+    <string name="start_new_activity">Iniciar Atividade</string>
+    <string name="view_leaderboard">Ranking</string>
+    <string name="view_history">Histórico</string>
+
+    <!-- Permissions -->
+    <string name="location_permission_required">Permissão de localização necessária para rastrear suas atividades</string>
+    <string name="location_permission_denied">Sem permissão de localização, não é possível rastrear atividades</string>
+
+    <!-- Messages -->
+    <string name="activity_saved">Atividade salva com sucesso!</string>
+    <string name="points_earned">%d pontos ganhos!</string>
+    <string name="territories_conquered_msg">%d territórios conquistados!</string>
+    <string name="finish_or_pause_first">Finalize ou pause a atividade antes de sair</string>
+
+    <!-- Empty states -->
+    <string name="no_activities">Nenhuma atividade registrada ainda.\nComece a caminhar para criar seu histórico!</string>
+    <string name="no_users_ranking">Nenhum usuário no ranking ainda.</string>
+
+    <!-- Menu -->
+    <string name="profile">Perfil</string>
+    <string name="settings">Configurações</string>
+    <string name="logout">Sair</string>
+
+    <!-- Activity types -->
+    <string name="walking">Caminhada</string>
+    <string name="running">Corrida</string>
+</resources>
