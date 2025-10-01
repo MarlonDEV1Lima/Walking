@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     app:cardElevation="4dp"
-    app:cardCornerRadius="8dp">
+    app:cardCornerRadius="12dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,66 +14,91 @@
         android:padding="16dp"
         android:gravity="center_vertical">
 
-        <!-- Posição no ranking -->
-        <TextView
-            android:id="@+id/tvPosition"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/circle_background"
-            android:text="1"
-            android:textColor="@android:color/white"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:gravity="center"
-            android:layout_marginEnd="16dp" />
+        <!-- Ranking e Ícone -->
+        <RelativeLayout
+            android:layout_width="60dp"
+            android:layout_height="60dp">
 
-        <!-- Informações do usuário -->
+            <TextView
+                android:id="@+id/tvRank"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="1"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/design_default_color_primary" />
+
+            <ImageView
+                android:id="@+id/ivRankIcon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_centerInParent="true"
+                android:visibility="gone"
+                android:src="@drawable/ic_trophy_gold" />
+
+        </RelativeLayout>
+
+        <!-- Informações do Usuário -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/tvName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Nome do Usuário"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/design_default_color_on_background" />
+            android:orientation="vertical"
+            android:layout_marginStart="16dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="4dp">
+                android:gravity="center_vertical">
 
                 <TextView
-                    android:id="@+id/tvPoints"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/tvUsername"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="100 pts"
-                    android:textSize="12sp"
-                    android:textColor="@color/design_default_color_primary"
-                    android:layout_marginEnd="16dp" />
+                    android:layout_weight="1"
+                    android:text="Nome do Usuário"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/design_default_color_on_surface" />
 
-                <TextView
-                    android:id="@+id/tvDistance"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="5.2 km"
-                    android:textSize="12sp"
-                    android:layout_marginEnd="16dp" />
-
-                <TextView
-                    android:id="@+id/tvTerritories"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="3 territórios"
-                    android:textSize="12sp" />
+                <ImageView
+                    android:id="@+id/ivActivityStatus"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_circle_green" />
 
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvLevel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nível 5"
+                android:textSize="14sp"
+                android:textColor="@color/design_default_color_secondary"
+                android:layout_marginTop="2dp" />
+
+            <TextView
+                android:id="@+id/tvMainStat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1,250 pontos"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/design_default_color_primary"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvSecondaryStat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="45.2 km • 12 territórios"
+                android:textSize="12sp"
+                android:textColor="@color/design_default_color_on_surface_variant"
+                android:layout_marginTop="2dp" />
 
         </LinearLayout>
 

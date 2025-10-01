@@ -112,7 +112,7 @@ public class AuthRepository {
     }
 
     private void createUserProfile(User user) {
-        firestore.collection("users").document(user.getUid())
+        firestore.collection("users").document(user.getUserId()) // Corrigido
                 .set(user)
                 .addOnSuccessListener(aVoid -> {
                     // Perfil criado com sucesso

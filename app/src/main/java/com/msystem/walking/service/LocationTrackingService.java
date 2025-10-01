@@ -24,7 +24,6 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
-import com.msystem.walking.MainActivity;
 import com.msystem.walking.R;
 import com.msystem.walking.model.LocationPoint;
 
@@ -44,7 +43,7 @@ public class LocationTrackingService extends Service {
     private Location lastLocation;
     private boolean isTracking = false;
 
-    private final IBinder binder = new LocationBinder();
+    private final IBinder binder = new LocalBinder();
 
     public interface LocationUpdateListener {
         void onLocationUpdate(LocationPoint point, double totalDistance);
@@ -52,7 +51,7 @@ public class LocationTrackingService extends Service {
 
     private LocationUpdateListener locationUpdateListener;
 
-    public class LocationBinder extends Binder {
+    public class LocalBinder extends Binder {
         public LocationTrackingService getService() {
             return LocationTrackingService.this;
         }
@@ -171,7 +170,7 @@ public class LocationTrackingService extends Service {
     }
 
     private Notification createNotification() {
-        Intent notificationIntent = new Intent(this, MainActivity.class);
+        Intent notificationIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)

@@ -125,7 +125,8 @@
             android:layout_marginStart="8dp"
             android:text="Finalizar"
             android:backgroundTint="@color/design_default_color_error"
-            android:drawableLeft="@android:drawable/checkbox_on_background" />
+            android:drawableLeft="@android:drawable/checkbox_on_background"
+            android:enabled="false" />
 
     </LinearLayout>
 

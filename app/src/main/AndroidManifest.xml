@@ -27,10 +27,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Walking">
 
-        <!-- API Key do Google Maps - Chave temporária para desenvolvimento -->
+        <!-- API Key do Google Maps -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAsQYTZ2D2dwH-HsCEpChpZL_fA_b5LRgw" />
+            android:value="AIzaSyBJdd6Ed5T591C01P2EZHPxpPhg9stDEIY" />
 
         <activity
             android:name=".MainActivity"

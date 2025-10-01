@@ -25,12 +25,7 @@ public class LoginActivity extends AppCompatActivity {
             result -> {
                 if (result.getResultCode() == RESULT_OK) {
                     Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
-                    try {
-                        GoogleSignInAccount account = task.getResult(ApiException.class);
-                        authRepository.firebaseAuthWithGoogle(account);
-                    } catch (ApiException e) {
-                        Toast.makeText(this, "Falha no login com Google", Toast.LENGTH_SHORT).show();
-                    }
+                    handleSignInResult(task);
                 }
             });
 
@@ -45,6 +40,15 @@ public class LoginActivity extends AppCompatActivity {
 
         setupObservers();
         setupClickListeners();
+    }
+
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            authRepository.firebaseAuthWithGoogle(account);
+        } catch (ApiException e) {
+            Toast.makeText(this, "Falha no login: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void setupObservers() {

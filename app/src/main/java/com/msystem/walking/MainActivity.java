@@ -3,356 +3,388 @@ package com.msystem.walking;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Location;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.provider.Settings;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.preference.PreferenceManager;
+import androidx.lifecycle.ViewModelProvider;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.Priority;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import com.msystem.walking.auth.LoginActivity;
-import com.msystem.walking.repository.AuthRepository;
+import com.msystem.walking.databinding.ActivityMainBinding;
+import com.msystem.walking.history.HistoryActivity;
+import com.msystem.walking.leaderboard.LeaderboardActivity;
+import com.msystem.walking.model.WalkSession;
+import com.msystem.walking.service.LocationTrackingService;
+import com.msystem.walking.tracking.TrackingActivity;
+import com.msystem.walking.utils.LocationPermissionHelper;
+import com.msystem.walking.utils.LocationAccuracyHelper;
 
-import org.osmdroid.api.IMapController;
-import org.osmdroid.config.Configuration;
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
-import org.osmdroid.util.GeoPoint;
-import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.Marker;
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
-
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity {
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
-    private AuthRepository authRepository;
-    private MapView mapView;
-    private IMapController mapController;
-    private MyLocationNewOverlay locationOverlay;
-    private FusedLocationProviderClient fusedLocationClient;
-    private LocationCallback locationCallback;
-    private Marker userMarker;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1000;
+    private static final int GPS_ENABLE_REQUEST_CODE = 1001;
+
+    private ActivityMainBinding binding;
+    private GoogleMap googleMap;
+    private MainViewModel viewModel;
+
+    private boolean isWalking = false;
+    private WalkSession currentWalkSession;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        // Configurar OSMDroid para melhor performance
-        Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
-        Configuration.getInstance().setUserAgentValue(getPackageName());
+        // Verificar autenticação
+        checkUserAuthentication();
 
-        setContentView(R.layout.activity_main);
+        // Inicializar ViewModel
+        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
-        authRepository = AuthRepository.getInstance();
-
-        // Verificar se o usuário está autenticado
-        if (authRepository.getCurrentUser() == null) {
-            redirectToLogin();
-            return;
+        // Inicializar mapa
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.mapFragment);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
         }
 
-        initializeMap();
-        initializeLocationServices();
+        setupUI();
         setupObservers();
-        setupButtonListeners();
+        setupClickListeners();
 
-        // Verificar e solicitar permissões de localização
-        if (checkLocationPermissions()) {
-            startLocationTracking();
-        } else {
-            requestLocationPermissions();
-        }
-    }
-
-    private void initializeMap() {
-        mapView = findViewById(R.id.osmMapView);
-
-        // Configurar o mapa com melhor qualidade
-        mapView.setTileSource(TileSourceFactory.MAPNIK); // OpenStreetMap padrão
-        mapView.setMultiTouchControls(true);
-
-        mapController = mapView.getController();
-        mapController.setZoom(18.0); // Zoom GPS - bem próximo para navegação
-
-        // Configurar overlay de localização
-        locationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), mapView);
-        locationOverlay.enableMyLocation();
-        locationOverlay.enableFollowLocation(); // Seguir automaticamente o usuário
-        locationOverlay.setDrawAccuracyEnabled(true); // Mostrar círculo de precisão
-        mapView.getOverlays().add(locationOverlay);
-
-        // Localização inicial padrão (será substituída pelo GPS)
-        GeoPoint startPoint = new GeoPoint(38.7223, -9.1393); // Lisboa
-        mapController.setCenter(startPoint);
-    }
-
-    private void initializeLocationServices() {
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        // Callback para atualizações de localização em tempo real com filtros de precisão
-        locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(@NonNull LocationResult locationResult) {
-                Location location = locationResult.getLastLocation();
-                if (location != null && isLocationAccurate(location)) {
-                    updateUserLocationOnMap(location);
-                }
-                // Se a localização não for precisa o suficiente, simplesmente ignora
-            }
-        };
-    }
-
-    private void updateUserLocationOnMap(Location location) {
-        GeoPoint userLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
-
-        // Atualizar marcador personalizado do usuário
-        updateUserMarker(userLocation, location);
-
-        // Centralizar mapa automaticamente (modo GPS)
-        mapController.animateTo(userLocation);
-
-        // Feedback de precisão para o usuário
-        providePrecisionFeedback(location);
-
-        mapView.invalidate();
-    }
-
-    private void updateUserMarker(GeoPoint location, Location gpsLocation) {
-        // Remover marcador anterior
-        if (userMarker != null) {
-            mapView.getOverlays().remove(userMarker);
-        }
-
-        // Criar marcador atualizado
-        userMarker = new Marker(mapView);
-        userMarker.setPosition(location);
-        userMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        userMarker.setIcon(ContextCompat.getDrawable(this, R.drawable.ic_location_user));
-        userMarker.setTitle("📍 Minha Localização");
-
-        // Informações detalhadas do GPS - usando Locale explícito
-        String snippet = String.format(Locale.getDefault(),
-                "📐 Lat: %.6f\n📐 Lon: %.6f\n🎯 Precisão: %.1fm\n⚡ Velocidade: %.1f km/h",
-                gpsLocation.getLatitude(),
-                gpsLocation.getLongitude(),
-                gpsLocation.getAccuracy(),
-                gpsLocation.getSpeed() * 3.6 // m/s para km/h
-        );
-        userMarker.setSnippet(snippet);
-
-        mapView.getOverlays().add(userMarker);
-    }
-
-    private void providePrecisionFeedback(Location location) {
-        float accuracy = location.getAccuracy();
-
-        // Feedback visual baseado na precisão GPS
-        if (accuracy <= 5) {
-            // GPS excelente (≤5m) - sem avisos necessários
-        } else if (accuracy <= 15) {
-            // GPS bom (5-15m) - aviso ocasional
-            if (Math.random() < 0.1) { // 10% chance de mostrar
-                Toast.makeText(this, "GPS: Boa precisão (" + (int) accuracy + "m)",
-                        Toast.LENGTH_SHORT).show();
-            }
-        } else if (accuracy <= 30) {
-            // GPS regular (15-30m) - aviso mais frequente
-            Toast.makeText(this, "GPS: Precisão moderada (" + (int) accuracy + "m)",
-                    Toast.LENGTH_SHORT).show();
-        } else {
-            // GPS ruim (>30m) - aviso sempre
-            Toast.makeText(this, "⚠️ GPS: Baixa precisão (" + (int) accuracy + "m)",
-                    Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void setupButtonListeners() {
-        // Botão "Minha Localização" - centralizar no usuário
-        findViewById(R.id.fabMyLocation).setOnClickListener(v -> centerOnUserLocation());
-
-        // Botão "Ativar Localização" no banner de aviso
-        findViewById(R.id.btnEnableLocation).setOnClickListener(v -> {
-            if (!checkLocationPermissions()) {
-                requestLocationPermissions();
-            } else {
-                startLocationTracking();
-                findViewById(R.id.limitedModeWarning).setVisibility(android.view.View.GONE);
-                Toast.makeText(this, "✅ GPS ativado!", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    public void centerOnUserLocation() {
-        if (!checkLocationPermissions()) {
-            Toast.makeText(this, "📍 Permissão de localização necessária", Toast.LENGTH_SHORT).show();
-            requestLocationPermissions();
-            return;
-        }
-
-        try {
-            fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
-                if (location != null) {
-                    GeoPoint userLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
-                    mapController.animateTo(userLocation);
-                    mapController.setZoom(19.0); // Zoom muito próximo
-                    Toast.makeText(this, "📍 Centralizado na sua localização", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "🔍 Aguardando sinal GPS...", Toast.LENGTH_SHORT).show();
-                }
-            });
-        } catch (SecurityException e) {
-            Toast.makeText(this, "❌ Erro ao acessar GPS", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void setupObservers() {
-        // Observar logout
-        authRepository.getLoggedOutLiveData().observe(this, isLoggedOut -> {
-            if (Boolean.TRUE.equals(isLoggedOut)) {
-                redirectToLogin();
-            }
-        });
-    }
-
-    private boolean checkLocationPermissions() {
-        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED &&
-               ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private void requestLocationPermissions() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                },
-                LOCATION_PERMISSION_REQUEST_CODE);
-    }
-
-    private void startLocationTracking() {
-        if (!checkLocationPermissions()) {
-            return;
-        }
-
-        // Configuração otimizada para GPS preciso
-        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000)
-                .setWaitForAccurateLocation(false)
-                .setMinUpdateIntervalMillis(1000)
-                .setMaxUpdateDelayMillis(5000)
-                .build();
-
-        try {
-            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, getMainLooper());
-
-            // Obter última localização conhecida para inicialização rápida
-            fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
-                if (location != null) {
-                    updateUserLocationOnMap(location);
-                }
-            });
-
-            Toast.makeText(this, "🛰️ GPS ativado - Aguardando sinal...", Toast.LENGTH_SHORT).show();
-        } catch (SecurityException e) {
-            Toast.makeText(this, "❌ Erro ao ativar GPS: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void stopLocationTracking() {
-        if (fusedLocationClient != null && locationCallback != null) {
-            fusedLocationClient.removeLocationUpdates(locationCallback);
-        }
-    }
-
-    private void redirectToLogin() {
-        startActivity(new Intent(this, LoginActivity.class));
-        finish();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_logout) {
-            authRepository.signOut();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        checkLocationPermission();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Registrar o receiver para atualizações de localização ao retomar a atividade
-        if (checkLocationPermissions()) {
-            startLocationTracking();
+        checkGPSStatus();
+        loadUserData();
+    }
+
+    private void checkUserAuthentication() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+        }
+    }
+
+    private void setupUI() {
+        // Configurar estado inicial dos botões
+        updateWalkingButton(false);
+        binding.territoryCapturingCard.setVisibility(View.GONE);
+        binding.gpsWarningCard.setVisibility(View.GONE);
+    }
+
+    private void setupObservers() {
+        // Observer para dados do usuário
+        viewModel.getUserData().observe(this, user -> {
+            if (user != null) {
+                binding.tvTotalPoints.setText(String.valueOf(user.getTotalPoints()));
+                binding.tvTerritories.setText(String.valueOf(user.getTerritoriesConquered()));
+            }
+        });
+
+        // Observer para distância diária
+        viewModel.getTodayDistance().observe(this, distance ->
+                binding.tvDistanceToday.setText(String.format(Locale.getDefault(), "%.1f", distance))
+        );
+
+        // Observer para status de caminhada
+        viewModel.getWalkingStatus().observe(this, walking -> {
+            isWalking = walking;
+            updateWalkingButton(walking);
+
+            if (walking) {
+                binding.territoryCapturingCard.setVisibility(View.VISIBLE);
+            } else {
+                binding.territoryCapturingCard.setVisibility(View.GONE);
+            }
+        });
+
+        // Observer para progresso de captura de território
+        viewModel.getTerritoryProgress().observe(this, progress -> {
+            binding.progressTerritoryCapture.setProgress(progress);
+            binding.tvTerritoryProgress.setText(
+                    String.format(Locale.getDefault(), "Capturando território... %d%%", progress)
+            );
+        });
+
+        // Observer para localização atual
+        viewModel.getCurrentLocation().observe(this, location -> {
+            if (location != null && googleMap != null) {
+                // Verificar se está no emulador com localização do Google
+                if (LocationAccuracyHelper.isRunningOnEmulator() &&
+                        LocationAccuracyHelper.isGoogleHQLocation(location)) {
+                    showEmulatorLocationWarning();
+                }
+
+                // Log detalhado da localização para debug
+                LocationAccuracyHelper.logLocationDetails(location, "MainActivity");
+
+                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18f));
+            }
+        });
+    }
+
+    private void setupClickListeners() {
+        // Botão iniciar/parar caminhada
+        binding.fabStartWalk.setOnClickListener(v -> {
+            if (!isWalking) {
+                startWalking();
+            } else {
+                stopWalking();
+            }
+        });
+
+        // Botão minha localização
+        binding.fabMyLocation.setOnClickListener(v -> viewModel.requestCurrentLocation());
+
+        // Botão histórico
+        binding.fabHistory.setOnClickListener(v -> startActivity(new Intent(this, HistoryActivity.class)));
+
+        // Clique longo no card de status para abrir ranking
+        binding.tvTotalPoints.setOnLongClickListener(v -> {
+            startActivity(new Intent(this, LeaderboardActivity.class));
+            return true;
+        });
+    }
+
+    @Override
+    public void onMapReady(@NonNull GoogleMap map) {
+        googleMap = map;
+
+        // Configurar estilo do mapa
+        googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        googleMap.getUiSettings().setZoomControlsEnabled(true);
+        googleMap.getUiSettings().setMyLocationButtonEnabled(false);
+
+        // Tentar habilitar localização se houver permissão
+        if (hasLocationPermission()) {
+            enableMyLocation();
+        }
+
+        // Configurar listener para cliques no mapa
+        googleMap.setOnMapClickListener(latLng -> {
+            if (isWalking) {
+                // Adicionar waypoint ou marcador especial durante caminhada
+                viewModel.addWaypoint(latLng);
+            }
+        });
+
+        // Carregar dados do mapa
+        loadMapData();
+    }
+
+    private void enableMyLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        googleMap.setMyLocationEnabled(true);
+        viewModel.startLocationUpdates();
+    }
+
+    private void loadMapData() {
+        // Carregar territórios do usuário
+        viewModel.loadUserTerritories();
+
+        // Carregar caminhadas recentes
+        viewModel.loadRecentWalks();
+    }
+
+    private void checkLocationPermission() {
+        if (!LocationPermissionHelper.hasLocationPermission(this)) {
+            if (LocationPermissionHelper.shouldShowRequestPermissionRationale(this)) {
+                showPermissionRationale();
+            } else {
+                LocationPermissionHelper.requestLocationPermission(this);
+            }
+        } else {
+            // Verificar se também temos permissão de localização em segundo plano (para melhor precisão)
+            checkBackgroundLocationPermission();
+        }
+    }
+
+    private void checkBackgroundLocationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // Explicar ao usuário por que precisamos da permissão de localização em segundo plano
+                new AlertDialog.Builder(this)
+                        .setTitle("Permissão de Localização Contínua")
+                        .setMessage("Para maior precisão durante as caminhadas, o app precisa acessar sua localização mesmo quando estiver em segundo plano. Isso garante que o rastreamento seja preciso.")
+                        .setPositiveButton("Permitir", (dialog, which) -> {
+                            ActivityCompat.requestPermissions(this,
+                                    new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION}, 1001);
+                        })
+                        .setNegativeButton("Agora não", null)
+                        .show();
+            }
+        }
+    }
+
+    private void showPermissionRationale() {
+        new AlertDialog.Builder(this)
+                .setTitle("Permissão de Localização")
+                .setMessage("Este app precisa da sua localização para funcionar corretamente.")
+                .setPositiveButton("Permitir", (dialog, which) ->
+                        LocationPermissionHelper.requestLocationPermission(this))
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void checkGPSStatus() {
+        if (!LocationPermissionHelper.isOptimalLocationSetup(this)) {
+            binding.gpsWarningCard.setVisibility(View.VISIBLE);
+
+            binding.btnEnableGPS.setOnClickListener(v -> {
+                if (!LocationPermissionHelper.isGPSEnabled(this) ||
+                        !LocationPermissionHelper.isHighAccuracyModeEnabled(this)) {
+                    // Abrir configurações de localização
+                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    startActivityForResult(intent, GPS_ENABLE_REQUEST_CODE);
+                } else {
+                    // Se o GPS está ligado mas não temos permissão, solicitar novamente
+                    checkLocationPermission();
+                }
+            });
+        } else {
+            binding.gpsWarningCard.setVisibility(View.GONE);
+        }
+    }
+
+    private void loadUserData() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            viewModel.loadUserData(user.getUid());
+            viewModel.loadTodayDistance(user.getUid());
+        }
+    }
+
+    private boolean hasLocationPermission() {
+        return LocationPermissionHelper.hasLocationPermission(this);
+    }
+
+    private void startWalking() {
+        if (!hasLocationPermission()) {
+            checkLocationPermission();
+            return;
+        }
+
+        if (!LocationPermissionHelper.isGPSEnabled(this)) {
+            checkGPSStatus();
+            return;
+        }
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            currentWalkSession = new WalkSession();
+            currentWalkSession.setUserId(user.getUid());
+            currentWalkSession.setStartTime(new Date());
+            currentWalkSession.setWaypoints(new ArrayList<>());
+
+            viewModel.startWalkSession(currentWalkSession);
+
+            // Iniciar serviço de rastreamento
+            Intent serviceIntent = new Intent(this, LocationTrackingService.class);
+            startService(serviceIntent);
+
+            // Ir para tela de rastreamento
+            Intent trackingIntent = new Intent(this, TrackingActivity.class);
+            startActivity(trackingIntent);
+        }
+    }
+
+    private void stopWalking() {
+        if (currentWalkSession != null) {
+            viewModel.stopWalkSession(currentWalkSession);
+
+            // Parar serviço de rastreamento
+            Intent serviceIntent = new Intent(this, LocationTrackingService.class);
+            stopService(serviceIntent);
+
+            currentWalkSession = null;
+        }
+    }
+
+    private void updateWalkingButton(boolean walking) {
+        if (walking) {
+            binding.fabStartWalk.setIconResource(R.drawable.ic_stop);
+            binding.fabStartWalk.setBackgroundTintList(
+                    ContextCompat.getColorStateList(this, R.color.red_500));
+        } else {
+            binding.fabStartWalk.setIconResource(R.drawable.ic_play_arrow);
+            binding.fabStartWalk.setBackgroundTintList(
+                    ContextCompat.getColorStateList(this, R.color.green_500));
         }
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        // Usar o método stopLocationTracking para evitar warning
-        stopLocationTracking();
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (googleMap != null) {
+                    enableMyLocation();
+                }
+            } else {
+                Toast.makeText(this, "Permissão de localização negada", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == GPS_ENABLE_REQUEST_CODE) {
+            checkGPSStatus();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Limpar recursos e referências com verificações de null safety
-        if (mapView != null) {
-            if (locationOverlay != null) {
-                mapView.getOverlays().remove(locationOverlay);
-            }
-            if (userMarker != null) {
-                mapView.getOverlays().remove(userMarker);
-            }
-        }
-
-        // Limpar callback de localização para evitar vazamentos de memória
-        if (fusedLocationClient != null && locationCallback != null) {
-            fusedLocationClient.removeLocationUpdates(locationCallback);
+        if (viewModel != null) {
+            viewModel.stopLocationUpdates();
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permissão concedida - iniciar rastreamento de localização
-                startLocationTracking();
-            } else {
-                // Permissão negada - mostrar mensagem apropriada
-                Toast.makeText(this, "❌ Permissão de localização necessária para o funcionamento do app", Toast.LENGTH_LONG).show();
-            }
-        }
-    }
-
-    /**
-     * Verifica se a localização tem precisão aceitável
-     * @param location Localização obtida do GPS
-     * @return true se a precisão for menor ou igual a 50 metros
-     */
-    private boolean isLocationAccurate(Location location) {
-        // Considera uma localização precisa se tiver precisão melhor que 50 metros
-        return location.getAccuracy() <= 50.0f;
+    private void showEmulatorLocationWarning() {
+        new AlertDialog.Builder(this)
+                .setTitle("Atenção")
+                .setMessage("Você está usando um emulador com localização do Google HQ. " +
+                        "Isso pode afetar a precisão do rastreamento. " +
+                        "Recomendamos usar um dispositivo físico para melhores resultados.")
+                .setPositiveButton("OK", null)
+                .show();
     }
 }

@@ -8,15 +8,14 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.msystem.walking.R;
 import com.msystem.walking.databinding.ActivityHistoryBinding;
 import com.msystem.walking.model.Activity;
 import com.msystem.walking.repository.DataRepository;
+import com.msystem.walking.repository.AuthRepository;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -38,7 +37,6 @@ public class HistoryActivity extends AppCompatActivity {
 
         setupToolbar();
         setupRecyclerView();
-        setupObservers();
         loadUserActivities();
     }
 
@@ -55,25 +53,18 @@ public class HistoryActivity extends AppCompatActivity {
         binding.recyclerView.setAdapter(adapter);
     }
 
-    private void setupObservers() {
-        dataRepository.getActivitiesLiveData().observe(this, new Observer<List<Activity>>() {
-            @Override
-            public void onChanged(List<Activity> activities) {
+    private void loadUserActivities() {
+        String userId = AuthRepository.getInstance().getCurrentUser().getUid();
+        dataRepository.loadUserActivities(userId, activities -> {
+            runOnUiThread(() -> {
                 adapter.setActivities(activities);
-                if (activities == null || activities.isEmpty()) {
-                    binding.tvEmptyMessage.setVisibility(View.VISIBLE);
-                    binding.recyclerView.setVisibility(View.GONE);
-                } else {
-                    binding.tvEmptyMessage.setVisibility(View.GONE);
-                    binding.recyclerView.setVisibility(View.VISIBLE);
-                }
-            }
+                calculateStats(activities);
+            });
         });
     }
 
-    private void loadUserActivities() {
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        dataRepository.getUserActivities(userId);
+    private void calculateStats(List<Activity> activities) {
+        // Implementar cálculo de estatísticas se necessário
     }
 
     @Override
@@ -134,7 +125,7 @@ public class HistoryActivity extends AppCompatActivity {
                 }
 
                 String type = activity.getType() != null ? activity.getType() : "walking";
-                tvType.setText(type.equals("running") ? "Corrida" : "Caminhada");
+                tvType.setText(type.equals("running") ? "🏃 Corrida" : "🚶 Caminhada");
 
                 tvDistance.setText(String.format("%.2f km", activity.getDistance()));
 

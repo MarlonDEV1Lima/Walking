@@ -50,9 +50,6 @@ dependencies {
     implementation libs.play.services.maps
     implementation libs.play.services.location
 
-    // Mapas - duas opções disponíveis
-    implementation libs.play.services.maps  // Google Maps (gratuito até 28.5k/mês)
-    implementation libs.osmdroid            // OpenStreetMap (100% gratuito)
 
     // Navigation
     implementation libs.navigation.fragment

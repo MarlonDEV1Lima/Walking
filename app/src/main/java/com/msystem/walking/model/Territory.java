@@ -1,5 +1,7 @@
 package com.msystem.walking.model;
 
+import com.msystem.walking.utils.TerritoryUtils;
+
 import java.util.Date;
 import java.util.List;
 
@@ -23,13 +25,9 @@ public class Territory {
         this.ownerName = ownerName;
         this.polygon = polygon;
         this.conqueredAt = new Date();
-        this.pointsValue = calculatePointsFromArea();
-    }
-
-    // Método para calcular pontos baseado na área
-    private int calculatePointsFromArea() {
-        // 1 ponto por cada 100 metros quadrados
-        return (int) (area / 100);
+        this.area = TerritoryUtils.calculatePolygonArea(polygon);
+        this.pointsValue = TerritoryUtils.calculatePointsFromArea(this.area);
+        this.color = TerritoryUtils.generateTerritoryColor(ownerId);
     }
 
     // Getters e Setters
@@ -43,12 +41,18 @@ public class Territory {
     public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
 
     public List<LocationPoint> getPolygon() { return polygon; }
-    public void setPolygon(List<LocationPoint> polygon) { this.polygon = polygon; }
+    public void setPolygon(List<LocationPoint> polygon) {
+        this.polygon = polygon;
+        if (polygon != null) {
+            this.area = TerritoryUtils.calculatePolygonArea(polygon);
+            this.pointsValue = TerritoryUtils.calculatePointsFromArea(this.area);
+        }
+    }
 
     public double getArea() { return area; }
     public void setArea(double area) {
         this.area = area;
-        this.pointsValue = calculatePointsFromArea();
+        this.pointsValue = TerritoryUtils.calculatePointsFromArea(area);
     }
 
     public int getPointsValue() { return pointsValue; }
@@ -62,4 +66,32 @@ public class Territory {
 
     public String getRegion() { return region; }
     public void setRegion(String region) { this.region = region; }
+
+    /**
+     * Verifica se este território é válido
+     */
+    public boolean isValid() {
+        return TerritoryUtils.isValidTerritory(this.polygon);
+    }
+
+    /**
+     * Calcula a distância do centro deste território para um ponto
+     */
+    public double distanceFromCenter(LocationPoint point) {
+        if (polygon == null || polygon.isEmpty()) return Double.MAX_VALUE;
+
+        // Calcular centro do território
+        double centerLat = polygon.stream().mapToDouble(LocationPoint::getLatitude).average().orElse(0);
+        double centerLng = polygon.stream().mapToDouble(LocationPoint::getLongitude).average().orElse(0);
+
+        LocationPoint center = new LocationPoint(centerLat, centerLng);
+        return TerritoryUtils.calculateDistance(center, point);
+    }
+
+    /**
+     * Verifica se um ponto está dentro deste território
+     */
+    public boolean containsPoint(LocationPoint point) {
+        return TerritoryUtils.isPointInTerritory(point, this.polygon);
+    }
 }

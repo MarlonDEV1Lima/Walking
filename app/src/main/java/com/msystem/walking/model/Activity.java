@@ -62,4 +62,11 @@ public class Activity {
 
     public List<String> getConqueredTerritoryIds() { return conqueredTerritoryIds; }
     public void setConqueredTerritoryIds(List<String> conqueredTerritoryIds) { this.conqueredTerritoryIds = conqueredTerritoryIds; }
+
+    public double getAverageSpeed() {
+        if (duration == 0) return 0.0;
+        // Calcular velocidade média em km/h
+        double durationInHours = duration / 3600000.0; // converter ms para horas
+        return distance / durationInHours;
+    }
 }
