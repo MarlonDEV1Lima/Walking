@@ -40,7 +40,7 @@ public class LeaderboardActivity extends AppCompatActivity {
         setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("🏆 Ranking");
+            getSupportActionBar().setTitle("Ranking");
         }
 
         dataRepository = DataRepository.getInstance();
@@ -58,10 +58,10 @@ public class LeaderboardActivity extends AppCompatActivity {
     }
 
     private void setupTabs() {
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("🏆 Pontos"));
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("🗺️ Territórios"));
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("🚶 Distância"));
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("🔥 Sequência"));
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Pontos"));
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Territórios"));
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Distância"));
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Sequência"));
 
         binding.tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override

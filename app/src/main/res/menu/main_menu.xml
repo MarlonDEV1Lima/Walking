@@ -3,21 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_profile"
+        android:id="@+id/menu_profile"
         android:title="Perfil"
-        android:icon="@android:drawable/ic_menu_myplaces"
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/action_settings"
-        android:title="Configurações"
-        android:icon="@android:drawable/ic_menu_preferences"
-        app:showAsAction="never" />
-
-    <item
-        android:id="@+id/action_logout"
+        android:id="@+id/menu_logout"
         android:title="Sair"
-        android:icon="@android:drawable/ic_menu_close_clear_cancel"
         app:showAsAction="never" />
 
 </menu>
+

@@ -18,6 +18,10 @@ public class Territory {
 
     public Territory() {
         // Construtor vazio necessário para Firebase
+        // ✅ Inicializar com valores padrão seguros
+        this.area = 0.0;
+        this.pointsValue = 0;
+        this.conqueredAt = new Date();
     }
 
     public Territory(String ownerId, String ownerName, List<LocationPoint> polygon) {
@@ -25,73 +29,143 @@ public class Territory {
         this.ownerName = ownerName;
         this.polygon = polygon;
         this.conqueredAt = new Date();
-        this.area = TerritoryUtils.calculatePolygonArea(polygon);
-        this.pointsValue = TerritoryUtils.calculatePointsFromArea(this.area);
-        this.color = TerritoryUtils.generateTerritoryColor(ownerId);
+
+        // ✅ Validação antes de calcular área e pontos
+        if (polygon != null && !polygon.isEmpty()) {
+            this.area = TerritoryUtils.calculatePolygonArea(polygon);
+            this.pointsValue = TerritoryUtils.calculatePointsFromArea(this.area);
+        } else {
+            this.area = 0.0;
+            this.pointsValue = 0;
+        }
+
+        // ✅ Validação antes de gerar cor
+        if (ownerId != null) {
+            this.color = TerritoryUtils.generateTerritoryColor(ownerId);
+        } else {
+            this.color = "#808080"; // Cor padrão cinza
+        }
     }
 
     // Getters e Setters
-    public String getTerritoryId() { return territoryId; }
-    public void setTerritoryId(String territoryId) { this.territoryId = territoryId; }
+    public String getTerritoryId() {
+        return territoryId;
+    }
 
-    public String getOwnerId() { return ownerId; }
-    public void setOwnerId(String ownerId) { this.ownerId = ownerId; }
+    public void setTerritoryId(String territoryId) {
+        this.territoryId = territoryId;
+    }
 
-    public String getOwnerName() { return ownerName; }
-    public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
+    public String getOwnerId() {
+        return ownerId;
+    }
 
-    public List<LocationPoint> getPolygon() { return polygon; }
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
+    }
+
+    public List<LocationPoint> getPolygon() {
+        return polygon;
+    }
+
     public void setPolygon(List<LocationPoint> polygon) {
         this.polygon = polygon;
-        if (polygon != null) {
+        // ✅ Recalcular área e pontos apenas se polygon for válido
+        if (polygon != null && !polygon.isEmpty()) {
             this.area = TerritoryUtils.calculatePolygonArea(polygon);
             this.pointsValue = TerritoryUtils.calculatePointsFromArea(this.area);
         }
     }
 
-    public double getArea() { return area; }
+    public double getArea() {
+        return area;
+    }
+
     public void setArea(double area) {
         this.area = area;
         this.pointsValue = TerritoryUtils.calculatePointsFromArea(area);
     }
 
-    public int getPointsValue() { return pointsValue; }
-    public void setPointsValue(int pointsValue) { this.pointsValue = pointsValue; }
+    public int getPointsValue() {
+        return pointsValue;
+    }
 
-    public Date getConqueredAt() { return conqueredAt; }
-    public void setConqueredAt(Date conqueredAt) { this.conqueredAt = conqueredAt; }
+    public void setPointsValue(int pointsValue) {
+        this.pointsValue = pointsValue;
+    }
 
-    public String getColor() { return color; }
-    public void setColor(String color) { this.color = color; }
+    public Date getConqueredAt() {
+        return conqueredAt;
+    }
 
-    public String getRegion() { return region; }
-    public void setRegion(String region) { this.region = region; }
+    public void setConqueredAt(Date conqueredAt) {
+        this.conqueredAt = conqueredAt;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
 
     /**
      * Verifica se este território é válido
      */
     public boolean isValid() {
-        return TerritoryUtils.isValidTerritory(this.polygon);
+        return ownerId != null && ownerName != null &&
+                polygon != null && !polygon.isEmpty() &&
+                TerritoryUtils.isValidTerritory(this.polygon);
     }
 
     /**
      * Calcula a distância do centro deste território para um ponto
      */
     public double distanceFromCenter(LocationPoint point) {
-        if (polygon == null || polygon.isEmpty()) return Double.MAX_VALUE;
+        if (polygon == null || polygon.isEmpty() || point == null) return Double.MAX_VALUE;
 
-        // Calcular centro do território
-        double centerLat = polygon.stream().mapToDouble(LocationPoint::getLatitude).average().orElse(0);
-        double centerLng = polygon.stream().mapToDouble(LocationPoint::getLongitude).average().orElse(0);
+        // ✅ Usar try-catch para stream operations
+        try {
+            // Calcular centro do território
+            double centerLat = polygon.stream().mapToDouble(LocationPoint::getLatitude).average().orElse(0);
+            double centerLng = polygon.stream().mapToDouble(LocationPoint::getLongitude).average().orElse(0);
 
-        LocationPoint center = new LocationPoint(centerLat, centerLng);
-        return TerritoryUtils.calculateDistance(center, point);
+            LocationPoint center = new LocationPoint(centerLat, centerLng);
+            return TerritoryUtils.calculateDistance(center, point);
+        } catch (Exception e) {
+            return Double.MAX_VALUE;
+        }
     }
 
     /**
      * Verifica se um ponto está dentro deste território
      */
     public boolean containsPoint(LocationPoint point) {
-        return TerritoryUtils.isPointInTerritory(point, this.polygon);
+        if (polygon == null || polygon.isEmpty() || point == null) {
+            return false;
+        }
+
+        try {
+            return TerritoryUtils.isPointInTerritory(point, this.polygon);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

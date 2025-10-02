@@ -163,6 +163,8 @@ public class DataRepository {
                         if (user != null) {
                             user.setTotalDistance(user.getTotalDistance() + activity.getDistance());
                             user.setTotalDuration(user.getTotalDuration() + activity.getDuration());
+                            // ✅ CORRIGIDO: Adicionando os pontos ganhos na atividade
+                            user.setTotalPoints(user.getTotalPoints() + activity.getPointsEarned());
 
                             firestore.collection("users").document(activity.getUserId())
                                     .set(user);

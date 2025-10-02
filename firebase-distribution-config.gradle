@@ -1,0 +1,36 @@
+// Adicionar ao build.gradle (Module: app)
+plugins {
+    id 'com.android.application'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.appdistribution' // ✅ NOVO
+}
+
+android {
+    // ...existing configuration...
+
+    buildTypes {
+        debug {
+            // ✅ NOVO: Configurar App Distribution para debug
+            firebaseAppDistribution {
+                releaseNotesFile = "release-notes.txt"
+                groups = "testers"
+            }
+        }
+        release {
+            // ...existing configuration...
+            firebaseAppDistribution {
+                releaseNotesFile = "release-notes.txt"
+                groups = "beta-testers"
+            }
+        }
+    }
+}
+
+// ✅ NOVO: Task personalizada para build + distribuição
+task distributeDebug {
+    dependsOn assembleDebug, appDistributionUploadDebug
+    doLast {
+        println "✅ App enviado para Firebase App Distribution!"
+        println "📱 Verifique seu celular para a notificação de atualização"
+    }
+}

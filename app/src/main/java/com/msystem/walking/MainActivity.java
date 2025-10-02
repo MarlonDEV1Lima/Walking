@@ -3,11 +3,15 @@ package com.msystem.walking;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -22,6 +26,11 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -29,6 +38,9 @@ import com.msystem.walking.auth.LoginActivity;
 import com.msystem.walking.databinding.ActivityMainBinding;
 import com.msystem.walking.history.HistoryActivity;
 import com.msystem.walking.leaderboard.LeaderboardActivity;
+import com.msystem.walking.model.LocationPoint;
+import com.msystem.walking.model.Territory;
+import com.msystem.walking.model.User;
 import com.msystem.walking.model.WalkSession;
 import com.msystem.walking.service.LocationTrackingService;
 import com.msystem.walking.tracking.TrackingActivity;
@@ -37,7 +49,10 @@ import com.msystem.walking.utils.LocationAccuracyHelper;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -47,9 +62,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ActivityMainBinding binding;
     private GoogleMap googleMap;
     private MainViewModel viewModel;
+    private BottomSheetBehavior<View> bottomSheetBehavior;
 
     private boolean isWalking = false;
     private WalkSession currentWalkSession;
+
+    // Mapas para gerenciar territórios exibidos
+    private Map<String, Polygon> territoryPolygons = new HashMap<>();
+    private Map<String, Marker> territoryMarkers = new HashMap<>();
+    private List<Territory> currentTerritories = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +84,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Inicializar ViewModel
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
+        // Configurar toolbar
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(true);
+        }
+
         // Inicializar mapa
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.mapFragment);
@@ -70,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mapFragment.getMapAsync(this);
         }
 
+        setupBottomSheet();
         setupUI();
         setupObservers();
         setupClickListeners();
@@ -92,6 +120,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    private void setupBottomSheet() {
+        View bottomSheet = findViewById(R.id.bottomSheetMainInfo);
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+
+        // Configurar comportamento do bottom sheet
+        bottomSheetBehavior.setHideable(false);
+        bottomSheetBehavior.setPeekHeight(getResources().getDimensionPixelSize(R.dimen.bottom_sheet_peek_height));
+
+        // Listener para expandir/contrair conteúdo
+        bottomSheetBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                View expandedContent = findViewById(R.id.bottomSheetExpandedContent);
+                if (newState == BottomSheetBehavior.STATE_EXPANDED) {
+                    expandedContent.setVisibility(View.VISIBLE);
+                } else if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
+                    expandedContent.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                // Animação suave do conteúdo expandido
+                View expandedContent = findViewById(R.id.bottomSheetExpandedContent);
+                expandedContent.setAlpha(slideOffset);
+            }
+        });
+    }
+
     private void setupUI() {
         // Configurar estado inicial dos botões
         updateWalkingButton(false);
@@ -103,15 +160,29 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Observer para dados do usuário
         viewModel.getUserData().observe(this, user -> {
             if (user != null) {
-                binding.tvTotalPoints.setText(String.valueOf(user.getTotalPoints()));
-                binding.tvTerritories.setText(String.valueOf(user.getTerritoriesConquered()));
+                // Atualizar pontos no toolbar
+                binding.tvPointsCompact.setText(String.format(Locale.getDefault(), "%d pts", user.getTotalPoints()));
+
+                // Atualizar dados no bottom sheet
+                TextView tvTotalPoints = findViewById(R.id.tvTotalPoints);
+                TextView tvTerritories = findViewById(R.id.tvTerritories);
+                TextView tvTerritoriesDetailed = findViewById(R.id.tvTerritoriesDetailed);
+                TextView tvTotalDistance = findViewById(R.id.tvTotalDistance);
+
+                if (tvTotalPoints != null) tvTotalPoints.setText(String.valueOf(user.getTotalPoints()));
+                if (tvTerritories != null) tvTerritories.setText(String.valueOf(user.getTerritoriesCount()));
+                if (tvTerritoriesDetailed != null) tvTerritoriesDetailed.setText(String.valueOf(user.getTerritoriesCount()));
+                if (tvTotalDistance != null) tvTotalDistance.setText(String.format(Locale.getDefault(), "%.1f", user.getTotalDistance()));
             }
         });
 
         // Observer para distância diária
-        viewModel.getTodayDistance().observe(this, distance ->
-                binding.tvDistanceToday.setText(String.format(Locale.getDefault(), "%.1f", distance))
-        );
+        viewModel.getTodayDistance().observe(this, distance -> {
+            TextView tvDistanceToday = findViewById(R.id.tvDistanceToday);
+            if (tvDistanceToday != null) {
+                tvDistanceToday.setText(String.format(Locale.getDefault(), "%.1f", distance));
+            }
+        });
 
         // Observer para status de caminhada
         viewModel.getWalkingStatus().observe(this, walking -> {
@@ -120,6 +191,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             if (walking) {
                 binding.territoryCapturingCard.setVisibility(View.VISIBLE);
+                // Colapsar bottom sheet durante caminhada para dar mais espaço ao mapa
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             } else {
                 binding.territoryCapturingCard.setVisibility(View.GONE);
             }
@@ -147,6 +220,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
                 googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18f));
+
+                // Carregar territórios na área visível
+                loadTerritoriesAroundLocation(location.getLatitude(), location.getLongitude());
+            }
+        });
+
+        // ✅ Observer para todos os territórios em tempo real
+        viewModel.getAllTerritories().observe(this, territories -> {
+            if (territories != null) {
+                currentTerritories = territories;
+                updateTerritoriesOnMap(territories);
+
+                // Atualizar contador de territórios no bottom sheet
+                TextView tvTotalTerritoriesGlobal = findViewById(R.id.tvTotalTerritoriesGlobal);
+                if (tvTotalTerritoriesGlobal != null) {
+                    tvTotalTerritoriesGlobal.setText(
+                        String.format(Locale.getDefault(), "Territórios globais: %d", territories.size())
+                    );
+                }
+            }
+        });
+
+        // ✅ Observer para leaderboard em tempo real
+        viewModel.getLeaderboard().observe(this, users -> {
+            if (users != null && !users.isEmpty()) {
+                // Mostrar top 3 no bottom sheet
+                updateLeaderboardPreview(users);
             }
         });
     }
@@ -164,13 +264,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Botão minha localização
         binding.fabMyLocation.setOnClickListener(v -> viewModel.requestCurrentLocation());
 
-        // Botão histórico
-        binding.fabHistory.setOnClickListener(v -> startActivity(new Intent(this, HistoryActivity.class)));
+        // Botão histórico no bottom sheet
+        findViewById(R.id.fabHistory).setOnClickListener(v ->
+            startActivity(new Intent(this, HistoryActivity.class)));
 
-        // Clique longo no card de status para abrir ranking
-        binding.tvTotalPoints.setOnLongClickListener(v -> {
+        // Botão leaderboard no toolbar (agora é TextView)
+        binding.btnLeaderboard.setOnClickListener(v ->
+            startActivity(new Intent(this, LeaderboardActivity.class)));
+
+        // ✅ Clique no preview do leaderboard para abrir tela completa
+        findViewById(R.id.leaderboardPreviewCard).setOnClickListener(v -> {
             startActivity(new Intent(this, LeaderboardActivity.class));
-            return true;
+        });
+
+        // Clique no header do bottom sheet para expandir/colapsar
+        findViewById(R.id.bottomSheetHeader).setOnClickListener(v -> {
+            if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            } else {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            }
         });
     }
 
@@ -188,12 +301,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             enableMyLocation();
         }
 
-        // Configurar listener para cliques no mapa
+        // ✅ NOVO: Configurar listener para cliques no mapa
         googleMap.setOnMapClickListener(latLng -> {
             if (isWalking) {
                 // Adicionar waypoint ou marcador especial durante caminhada
                 viewModel.addWaypoint(latLng);
             }
+        });
+
+        // ✅ NOVO: Configurar listener para cliques em territórios
+        googleMap.setOnPolygonClickListener(polygon -> {
+            // Encontrar território clicado
+            Territory clickedTerritory = findTerritoryByPolygon(polygon);
+            if (clickedTerritory != null) {
+                showTerritoryDetails(clickedTerritory);
+            }
+        });
+
+        // ✅ NOVO: Listener para mudanças na câmera (recarregar territórios)
+        googleMap.setOnCameraIdleListener(() -> {
+            LatLng center = googleMap.getCameraPosition().target;
+            loadTerritoriesAroundLocation(center.latitude, center.longitude);
         });
 
         // Carregar dados do mapa
@@ -263,17 +391,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (!LocationPermissionHelper.isOptimalLocationSetup(this)) {
             binding.gpsWarningCard.setVisibility(View.VISIBLE);
 
-            binding.btnEnableGPS.setOnClickListener(v -> {
-                if (!LocationPermissionHelper.isGPSEnabled(this) ||
-                        !LocationPermissionHelper.isHighAccuracyModeEnabled(this)) {
-                    // Abrir configurações de localização
-                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    startActivityForResult(intent, GPS_ENABLE_REQUEST_CODE);
-                } else {
-                    // Se o GPS está ligado mas não temos permissão, solicitar novamente
-                    checkLocationPermission();
-                }
-            });
+            // O botão já está definido no layout activity_main.xml como btnEnableGps
+            // Não há necessidade de definir listener aqui pois já está no setupClickListeners()
         } else {
             binding.gpsWarningCard.setVisibility(View.GONE);
         }
@@ -333,15 +452,218 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    /**
+     * ✅ NOVO: Atualiza os territórios exibidos no mapa
+     */
+    private void updateTerritoriesOnMap(List<Territory> territories) {
+        if (googleMap == null) return;
+
+        // Limpar territórios antigos
+        clearTerritories();
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        String currentUserId = currentUser != null ? currentUser.getUid() : "";
+
+        // Adicionar novos territórios
+        for (Territory territory : territories) {
+            if (territory.getPolygon() != null && !territory.getPolygon().isEmpty()) {
+                addTerritoryToMap(territory, currentUserId.equals(territory.getOwnerId()));
+            }
+        }
+    }
+
+    /**
+     * ✅ NOVO: Adiciona um território ao mapa
+     */
+    private void addTerritoryToMap(Territory territory, boolean isOwner) {
+        if (googleMap == null || territory.getPolygon() == null) return;
+
+        // Converter pontos para LatLng
+        List<LatLng> polygonPoints = new ArrayList<>();
+        for (LocationPoint point : territory.getPolygon()) {
+            polygonPoints.add(new LatLng(point.getLatitude(), point.getLongitude()));
+        }
+
+        // Definir cores baseado no proprietário
+        int strokeColor = Color.parseColor(territory.getColor());
+        int fillColor = isOwner ?
+            Color.argb(60, Color.red(strokeColor), Color.green(strokeColor), Color.blue(strokeColor)) :
+            Color.argb(30, Color.red(strokeColor), Color.green(strokeColor), Color.blue(strokeColor));
+
+        // Criar polígono
+        PolygonOptions polygonOptions = new PolygonOptions()
+                .addAll(polygonPoints)
+                .strokeColor(strokeColor)
+                .strokeWidth(isOwner ? 4f : 2f)
+                .fillColor(fillColor)
+                .clickable(true);
+
+        Polygon polygon = googleMap.addPolygon(polygonOptions);
+        territoryPolygons.put(territory.getTerritoryId(), polygon);
+
+        // Adicionar marcador no centro do território
+        LatLng center = calculateCenter(polygonPoints);
+        MarkerOptions markerOptions = new MarkerOptions()
+                .position(center)
+                .title(territory.getOwnerName())
+                .snippet(String.format(Locale.getDefault(),
+                    "%d pontos • %.0f m²", territory.getPointsValue(), territory.getArea()));
+
+        Marker marker = googleMap.addMarker(markerOptions);
+        if (marker != null) {
+            territoryMarkers.put(territory.getTerritoryId(), marker);
+        }
+    }
+
+    /**
+     * ✅ NOVO: Limpa todos os territórios do mapa
+     */
+    private void clearTerritories() {
+        for (Polygon polygon : territoryPolygons.values()) {
+            polygon.remove();
+        }
+        for (Marker marker : territoryMarkers.values()) {
+            marker.remove();
+        }
+        territoryPolygons.clear();
+        territoryMarkers.clear();
+    }
+
+    /**
+     * ✅ NOVO: Carrega territórios ao redor de uma localização - CORRIGIDO
+     */
+    private void loadTerritoriesAroundLocation(double lat, double lng) {
+        viewModel.loadTerritoriesInArea(lat, lng, 5.0, new com.msystem.walking.repository.TerritoryRepository.Callback<List<Territory>>() {
+            @Override
+            public void onResult(List<Territory> territories) {
+                // ✅ Os territórios já são atualizados via LiveData observer - não mostrar toast
+                android.util.Log.d("MainActivity", "Territórios carregados com sucesso: " + territories.size());
+            }
+
+            @Override
+            public void onError(String error) {
+                // ✅ Apenas log do erro, sem mostrar toast ao usuário (pode ser normal não ter territórios)
+                android.util.Log.w("MainActivity", "Aviso ao carregar territórios: " + error);
+                // Não mostrar Toast para não incomodar o usuário desnecessariamente
+            }
+        });
+    }
+
+    /**
+     * ✅ NOVO: Encontra território pelo polígono clicado
+     */
+    private Territory findTerritoryByPolygon(Polygon polygon) {
+        for (Map.Entry<String, Polygon> entry : territoryPolygons.entrySet()) {
+            if (entry.getValue().equals(polygon)) {
+                String territoryId = entry.getKey();
+                return currentTerritories.stream()
+                        .filter(t -> territoryId.equals(t.getTerritoryId()))
+                        .findFirst()
+                        .orElse(null);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * ✅ NOVO: Mostra detalhes do território
+     */
+    private void showTerritoryDetails(Territory territory) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        boolean isOwner = currentUser != null && currentUser.getUid().equals(territory.getOwnerId());
+
+        String message = String.format(Locale.getDefault(),
+                "Proprietário: %s\n" +
+                "Área: %.0f m²\n" +
+                "Pontos: %d\n" +
+                "Conquistado: %s",
+                territory.getOwnerName(),
+                territory.getArea(),
+                territory.getPointsValue(),
+                android.text.format.DateFormat.format("dd/MM/yyyy HH:mm", territory.getConqueredAt())
+        );
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle(isOwner ? "Seu Território" : "Território de " + territory.getOwnerName())
+                .setMessage(message)
+                .setPositiveButton("OK", null);
+
+        // Se não é o proprietário, adicionar opção de conquistar
+        if (!isOwner && currentUser != null) {
+            builder.setNegativeButton("Conquistar", (dialog, which) -> {
+                attemptConquerTerritory(territory, currentUser);
+            });
+        }
+
+        builder.show();
+    }
+
+    /**
+     * ✅ NOVO: Tenta conquistar um território
+     */
+    private void attemptConquerTerritory(Territory territory, FirebaseUser currentUser) {
+        new AlertDialog.Builder(this)
+                .setTitle("Conquistar Território")
+                .setMessage("Deseja conquistar este território? Isso custará pontos se você não estiver próximo.")
+                .setPositiveButton("Sim", (dialog, which) -> {
+                    viewModel.conquerTerritory(
+                            territory.getTerritoryId(),
+                            currentUser.getUid(),
+                            currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "Usuário",
+                            new com.msystem.walking.repository.TerritoryRepository.Callback<Boolean>() {
+                                @Override
+                                public void onResult(Boolean success) {
+                                    if (success) {
+                                        Toast.makeText(MainActivity.this, "Território conquistado!", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(MainActivity.this, "Falha ao conquistar território", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+
+                                @Override
+                                public void onError(String error) {
+                                    Toast.makeText(MainActivity.this, "Erro: " + error, Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                    );
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    /**
+     * ✅ NOVO: Atualiza preview do leaderboard no bottom sheet
+     */
+    private void updateLeaderboardPreview(List<User> users) {
+        TextView tvLeader1 = findViewById(R.id.tvLeader1);
+        TextView tvLeader2 = findViewById(R.id.tvLeader2);
+        TextView tvLeader3 = findViewById(R.id.tvLeader3);
+
+        if (tvLeader1 != null && users.size() >= 1) {
+            tvLeader1.setText(String.format(Locale.getDefault(),
+                "1º %s - %d pts", users.get(0).getDisplayName(), users.get(0).getTotalPoints()));
+        }
+        if (tvLeader2 != null && users.size() >= 2) {
+            tvLeader2.setText(String.format(Locale.getDefault(),
+                "2º %s - %d pts", users.get(1).getDisplayName(), users.get(1).getTotalPoints()));
+        }
+        if (tvLeader3 != null && users.size() >= 3) {
+            tvLeader3.setText(String.format(Locale.getDefault(),
+                "3º %s - %d pts", users.get(2).getDisplayName(), users.get(2).getTotalPoints()));
+        }
+    }
+
     private void updateWalkingButton(boolean walking) {
         if (walking) {
-            binding.fabStartWalk.setIconResource(R.drawable.ic_stop);
+            binding.fabStartWalk.setIcon(ContextCompat.getDrawable(this, R.drawable.ic_stop));
+            binding.fabStartWalk.setText("Parar Caminhada");
             binding.fabStartWalk.setBackgroundTintList(
-                    ContextCompat.getColorStateList(this, R.color.red_500));
+                    ContextCompat.getColorStateList(this, R.color.black));
         } else {
-            binding.fabStartWalk.setIconResource(R.drawable.ic_play_arrow);
+            binding.fabStartWalk.setIcon(ContextCompat.getDrawable(this, R.drawable.ic_walking));
+            binding.fabStartWalk.setText("Iniciar Caminhada");
             binding.fabStartWalk.setBackgroundTintList(
-                    ContextCompat.getColorStateList(this, R.color.green_500));
+                    ContextCompat.getColorStateList(this, R.color.black));
         }
     }
 
@@ -386,5 +708,60 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         "Recomendamos usar um dispositivo físico para melhores resultados.")
                 .setPositiveButton("OK", null)
                 .show();
+    }
+
+    /**
+     * Calcula o centro de um polígono
+     */
+    private LatLng calculateCenter(List<LatLng> points) {
+        double lat = 0, lng = 0;
+        for (LatLng point : points) {
+            lat += point.latitude;
+            lng += point.longitude;
+        }
+        return new LatLng(lat / points.size(), lng / points.size());
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.menu_profile) {
+            // Abrir tela de perfil
+            startActivity(new Intent(this, com.msystem.walking.profile.ProfileActivity.class));
+            return true;
+        } else if (id == R.id.menu_logout) {
+            // Mostrar diálogo de logout
+            showLogoutDialog();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showLogoutDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Sair")
+                .setMessage("Tem certeza que deseja sair da sua conta?")
+                .setPositiveButton("Sair", (dialog, which) -> performLogout())
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void performLogout() {
+        // Fazer logout do Firebase
+        FirebaseAuth.getInstance().signOut();
+
+        // Redirecionar para tela de login
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }

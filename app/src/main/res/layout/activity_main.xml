@@ -5,147 +5,109 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Mapa Principal -->
+    <!-- Mapa Principal - Ocupa toda a tela -->
     <fragment
         android:id="@+id/mapFragment"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Painel de Status Superior -->
-    <com.google.android.material.card.MaterialCardView
+    <!-- Toolbar Superior com degradê -->
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:cardElevation="8dp"
-        app:cardCornerRadius="16dp"
-        app:cardBackgroundColor="#E8F5E8">
+        android:layout_gravity="top"
+        app:elevation="4dp">
 
-        <LinearLayout
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="16dp"
-            android:gravity="center_vertical">
+            android:layout_height="?attr/actionBarSize"
+            android:background="@drawable/gradient_dark_card"
+            app:title="Walking Territory"
+            app:titleTextColor="@color/white">
 
-            <!-- Pontos Totais -->
+            <!-- Botões de ação no toolbar -->
             <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:layout_marginEnd="16dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
+                <!-- Status de pontos compacto com degradê -->
                 <TextView
-                    android:id="@+id/tvTotalPoints"
+                    android:id="@+id/tvPointsCompact"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textSize="24sp"
+                    android:text="0 pts"
+                    android:textColor="@color/black"
                     android:textStyle="bold"
-                    android:textColor="#2E7D32" />
+                    android:background="@drawable/gradient_gray_card"
+                    android:padding="8dp"
+                    android:layout_marginEnd="8dp" />
 
+                <!-- Botão leaderboard simplificado (texto apenas) -->
                 <TextView
+                    android:id="@+id/btnLeaderboard"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🏆 Pontos"
+                    android:text="Ranking"
+                    android:textColor="@color/white"
                     android:textSize="12sp"
-                    android:textColor="#2E7D32" />
+                    android:padding="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackgroundBorderless" />
 
             </LinearLayout>
 
-            <View
-                android:layout_width="1dp"
-                android:layout_height="40dp"
-                android:background="#CCCCCC" />
+        </com.google.android.material.appbar.MaterialToolbar>
 
-            <!-- Territórios Conquistados -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
+    </com.google.android.material.appbar.AppBarLayout>
 
-                <TextView
-                    android:id="@+id/tvTerritories"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:textColor="#2E7D32" />
+    <!-- FAB Minha Localização com degradê -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabMyLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="80dp"
+        android:layout_marginEnd="16dp"
+        android:src="@android:drawable/ic_menu_mylocation"
+        android:contentDescription="Minha Localização"
+        app:tint="@color/white"
+        app:backgroundTint="@color/gray_dark"
+        app:elevation="6dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🗺️ Territórios"
-                    android:textSize="12sp"
-                    android:textColor="#2E7D32" />
-
-            </LinearLayout>
-
-            <View
-                android:layout_width="1dp"
-                android:layout_height="40dp"
-                android:background="#CCCCCC" />
-
-            <!-- Distância Hoje -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:id="@+id/tvDistanceToday"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0.0"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:textColor="#2E7D32" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🚶 Km Hoje"
-                    android:textSize="12sp"
-                    android:textColor="#2E7D32" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- Status de Captura de Território -->
+    <!-- Status de Captura de Território com degradê -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/territoryCapturingCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
-        android:layout_marginTop="120dp"
+        android:layout_marginTop="80dp"
         android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="80dp"
         android:visibility="gone"
-        app:cardElevation="8dp"
-        app:cardCornerRadius="16dp"
-        app:cardBackgroundColor="#FFF3E0">
+        app:cardElevation="4dp"
+        app:cardCornerRadius="8dp"
+        app:cardBackgroundColor="@color/white">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="16dp"
+            android:padding="12dp"
+            android:background="@drawable/gradient_status_card"
             android:gravity="center_vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="⚡"
-                android:textSize="24sp"
+            <!-- Removido ícone, apenas indicador simples -->
+            <View
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@color/black"
                 android:layout_marginEnd="12dp" />
 
             <LinearLayout
@@ -155,30 +117,23 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Capturando Território"
-                    android:textStyle="bold"
-                    android:textSize="16sp"
-                    android:textColor="#E65100" />
-
-                <TextView
                     android:id="@+id/tvTerritoryProgress"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Continue caminhando para expandir sua área!"
-                    android:textSize="14sp"
-                    android:textColor="#E65100" />
+                    android:text="Capturando território..."
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black" />
 
                 <ProgressBar
                     android:id="@+id/progressTerritoryCapture"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="4dp"
                     android:max="100"
                     android:progress="0"
-                    android:progressTint="#E65100" />
+                    android:progressTint="@color/black" />
 
             </LinearLayout>
 
@@ -186,76 +141,48 @@
 
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Botões de Ação Inferiores -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <!-- Bottom Sheet com informações principais -->
+    <include layout="@layout/bottom_sheet_main_info" />
+
+    <!-- FAB Principal com degradê melhorado -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fabStartWalk"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_margin="16dp"
-        android:orientation="horizontal"
-        android:gravity="center">
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="120dp"
+        android:text="Iniciar Caminhada"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/black"
+        app:elevation="8dp" />
 
-        <!-- Botão Iniciar/Parar Caminhada -->
-        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-            android:id="@+id/fabStartWalk"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="12dp"
-            android:text="🚶 Iniciar Caminhada"
-            android:textColor="@android:color/white"
-            app:backgroundTint="#4CAF50"
-            app:icon="@drawable/ic_walking"
-            app:iconTint="@android:color/white" />
-
-        <!-- Botão Minha Localização -->
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabMyLocation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="12dp"
-            android:src="@android:drawable/ic_menu_mylocation"
-            android:contentDescription="Minha Localização"
-            app:tint="@android:color/white"
-            app:backgroundTint="#2196F3" />
-
-        <!-- Botão Histórico -->
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabHistory"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@android:drawable/ic_menu_recent_history"
-            android:contentDescription="Histórico"
-            app:tint="@android:color/white"
-            app:backgroundTint="#FF9800" />
-
-    </LinearLayout>
-
-    <!-- Warning GPS Desabilitado -->
+    <!-- Warning GPS com degradê -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/gpsWarningCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:layout_marginBottom="100dp"
+        android:layout_marginBottom="180dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:visibility="gone"
-        app:cardBackgroundColor="#FFEBEE"
-        app:cardElevation="8dp"
-        app:cardCornerRadius="12dp">
+        app:cardBackgroundColor="@color/white"
+        app:cardElevation="4dp"
+        app:cardCornerRadius="8dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="16dp"
+            android:padding="12dp"
+            android:background="@drawable/gradient_status_card"
             android:gravity="center_vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🚨"
-                android:textSize="24sp"
+            <!-- Indicador de aviso simplificado -->
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:background="@color/black"
                 android:layout_marginEnd="12dp" />
 
             <LinearLayout
@@ -269,25 +196,25 @@
                     android:layout_height="wrap_content"
                     android:text="GPS Necessário"
                     android:textStyle="bold"
-                    android:textSize="16sp"
-                    android:textColor="#C62828" />
+                    android:textSize="14sp"
+                    android:textColor="@color/black" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Ative o GPS para conquistar territórios!"
-                    android:textSize="14sp"
-                    android:textColor="#C62828" />
+                    android:text="Ative o GPS para usar o app"
+                    android:textSize="12sp"
+                    android:textColor="@color/gray_medium" />
 
             </LinearLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnEnableGPS"
+            <Button
+                android:id="@+id/btnEnableGps"
                 style="@style/Widget.Material3.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ATIVAR"
-                android:textColor="#C62828" />
+                android:text="Ativar"
+                android:textColor="@color/black" />
 
         </LinearLayout>
 

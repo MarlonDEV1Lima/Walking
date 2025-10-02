@@ -371,16 +371,16 @@ public class TrackingActivity extends AppCompatActivity implements OnMapReadyCal
 
     private void showActivitySummaryDialog(Activity activity) {
         String message = String.format(
-            "🎉 Atividade Concluída!\n\n" +
-            "📏 Distância: %.2f km\n" +
-            "⏱️ Tempo: %s\n" +
-            "🏆 Pontos ganhos: %d\n" +
-            "🗺️ Território conquistado: %s",
+            "Atividade Concluída!\n\n" +
+            "Distância: %.2f km\n" +
+            "Tempo: %s\n" +
+            "Pontos ganhos: %d\n" +
+            "Território conquistado: %s",
             activity.getDistance(),
             formatDuration(SystemClock.elapsedRealtime() - startTime),
             activity.getPointsEarned(),
             (activity.getRoute() != null && activity.getRoute().size() >= MIN_POINTS_FOR_TERRITORY)
-                ? "Sim ✅" : "Não (percurso muito pequeno) ❌"
+                ? "Sim" : "Não (percurso muito pequeno)"
         );
 
         new AlertDialog.Builder(this)

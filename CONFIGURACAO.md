@@ -1,11 +1,11 @@
-# 🔧 Guia de Configuração Final - WalkKing
+# Guia de Configuração Final - WalkKing
 
-## ✅ Já Configurado
-- ✅ Projeto Firebase: `walking-df5d0` 
-- ✅ Código atualizado para usar seu projeto
-- ✅ Build compilando sem erros
+## Já Configurado
+- Projeto Firebase: `walking-df5d0` 
+- Código atualizado para usar seu projeto
+- Build compilando sem erros
 
-## 🚀 Próximos Passos Obrigatórios
+## Próximos Passos Obrigatórios
 
 ### 1. **Configurar App Android no Firebase Console**
 
@@ -75,7 +75,7 @@
    android:value="COLE_SUA_GOOGLE_MAPS_API_KEY_AQUI"
    ```
 
-## 🧪 **Teste da Configuração**
+## **Teste da Configuração**
 
 ### Após completar os passos acima:
 
@@ -89,7 +89,7 @@
    .\gradlew installDebug
    ```
 
-## 📋 **Checklist de Configuração**
+## **Checklist de Configuração**
 
 - [ ] App Android adicionado no Firebase Console
 - [ ] google-services.json baixado e substituído
@@ -101,7 +101,7 @@
 - [ ] Build do projeto executado com sucesso
 - [ ] App testado no dispositivo
 
-## 🐛 **Solução de Problemas Comuns**
+## **Solução de Problemas Comuns**
 
 ### Erro de autenticação Google:
 - Verifique se o Web Client ID está correto
@@ -115,16 +115,16 @@
 - Aceite todas as permissões solicitadas no dispositivo
 - Verifique se as permissões estão no AndroidManifest.xml
 
-## 🎯 **Resultado Final**
+## **Resultado Final**
 
 Após seguir todos os passos, seu app WalkKing estará:
-- ✅ Conectado ao Firebase real
-- ✅ Com autenticação funcionando
-- ✅ Com banco de dados ativo
-- ✅ Com mapas integrados
-- ✅ Pronto para rastrear caminhadas e conquistar territórios!
+- Conectado ao Firebase real
+- Com autenticação funcionando
+- Com banco de dados ativo
+- Com mapas integrados
+- Pronto para rastrear caminhadas e conquistar territórios!
 
-## 📞 **Suporte**
+## **Suporte**
 
 Se encontrar algum problema, verifique:
 1. Se todos os serviços estão ativados no Firebase Console

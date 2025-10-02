@@ -1,7 +1,35 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme padronizado em preto e branco para modo escuro -->
     <style name="Base.Theme.Walking" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <!-- Cores principais invertidas para modo escuro usando atributos corretos do Material 3 -->
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorPrimaryContainer">@color/gray_light</item>
+        <item name="colorOnPrimaryContainer">@color/black</item>
+
+        <item name="colorSecondary">@color/gray_medium</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="colorSecondaryContainer">@color/gray_dark</item>
+        <item name="colorOnSecondaryContainer">@color/white</item>
+
+        <item name="colorTertiary">@color/gray_light</item>
+        <item name="colorOnTertiary">@color/black</item>
+
+        <item name="colorError">@color/white</item>
+        <item name="colorOnError">@color/black</item>
+
+        <item name="colorSurface">@color/black</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorSurfaceVariant">@color/gray_dark</item>
+        <item name="colorOnSurfaceVariant">@color/gray_light</item>
+
+        <item name="colorOutline">@color/gray_medium</item>
+        <item name="colorOutlineVariant">@color/gray_dark</item>
+
+        <!-- Status bar e navigation bar -->
+        <item name="android:statusBarColor">@color/black</item>
+        <item name="android:navigationBarColor">@color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 </resources>

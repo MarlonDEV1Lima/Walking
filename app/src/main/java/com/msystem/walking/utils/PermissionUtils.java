@@ -18,13 +18,12 @@ public class PermissionUtils {
 
     public static void showLocationPermissionDialog(Context context, PermissionCallback callback) {
         new AlertDialog.Builder(context)
-                .setTitle("📍 Localização Necessária")
-                .setMessage("O WalkKing precisa acessar sua localização para:\n\n" +
-                          "🚶‍♂️ Rastrear suas caminhadas\n" +
-                          "🗺️ Mostrar seu trajeto no mapa\n" +
-                          "👑 Conquistar territórios\n" +
-                          "📊 Calcular distância percorrida\n\n" +
-                          "Seus dados ficam seguros e privados!")
+                .setTitle("Localização Necessária")
+                .setMessage("Este app precisa de acesso à localização para:\n\n" +
+                          "• Rastrear suas caminhadas\n" +
+                          "• Mostrar seu trajeto no mapa\n" +
+                          "• Calcular distância e pontos\n\n" +
+                          "Sua privacidade é protegida!")
                 .setPositiveButton("Permitir", (dialog, which) -> {
                     dialog.dismiss();
                     if (callback != null) callback.onPermissionExplained();
@@ -39,11 +38,11 @@ public class PermissionUtils {
 
     public static void showPermissionDeniedDialog(Context context, PermissionCallback callback) {
         new AlertDialog.Builder(context)
-                .setTitle("⚠️ Permissão Negada")
+                .setTitle("Permissão Negada")
                 .setMessage("Sem acesso à localização, o WalkKing não consegue:\n\n" +
-                          "❌ Rastrear suas atividades\n" +
-                          "❌ Mostrar o mapa\n" +
-                          "❌ Conquistar territórios\n\n" +
+                          "• Rastrear suas atividades\n" +
+                          "• Mostrar o mapa\n" +
+                          "• Conquistar territórios\n\n" +
                           "Para ativar, vá em Configurações > Apps > WalkKing > Permissões > Localização")
                 .setPositiveButton("Abrir Configurações", (dialog, which) -> {
                     openAppSettings(context);
@@ -58,11 +57,11 @@ public class PermissionUtils {
 
     public static void showBackgroundLocationDialog(Context context, PermissionCallback callback) {
         new AlertDialog.Builder(context)
-                .setTitle("🔄 Rastreamento Contínuo")
+                .setTitle("Rastreamento Contínuo")
                 .setMessage("Para funcionar melhor, o WalkKing pode rastrear sua localização mesmo quando o app não estiver aberto.\n\n" +
-                          "✅ Isso permite rastrear atividades completas\n" +
-                          "✅ Não consome bateria extra\n" +
-                          "✅ Você pode desativar a qualquer momento\n\n" +
+                          "• Isso permite rastrear atividades completas\n" +
+                          "• Não consome bateria extra\n" +
+                          "• Você pode desativar a qualquer momento\n\n" +
                           "Recomendamos escolher 'Permitir sempre'")
                 .setPositiveButton("Entendi", (dialog, which) -> {
                     dialog.dismiss();
@@ -84,7 +83,7 @@ public class PermissionUtils {
 
     public static void showLocationServicesDialog(Context context) {
         new AlertDialog.Builder(context)
-                .setTitle("📡 GPS Desativado")
+                .setTitle("GPS Desativado")
                 .setMessage("O GPS do seu dispositivo está desativado.\n\n" +
                           "Para usar o WalkKing, ative o GPS em:\n" +
                           "Configurações > Localização > Ativar")
