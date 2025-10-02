@@ -43,9 +43,10 @@ local.properties
 *.jks
 *.keystore
 
-# Google Services (Firebase)
-# Descomente se você quiser manter o google-services.json privado
-# google-services.json
+# Google Services (Firebase) - IMPORTANTE: Manter privados
+google-services.json
+*firebase-adminsdk*.json
+*service-account*.json
 
 # Android Profiling
 *.hprof
@@ -77,5 +78,6 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
-# Firebase Admin SDK
+# Arquivos sensíveis do Firebase (CRÍTICO)
 walking-df5d0-firebase-adminsdk-fbsvc-98ad732c8c.json
+*-firebase-adminsdk-*.json

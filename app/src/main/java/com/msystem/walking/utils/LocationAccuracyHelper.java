@@ -120,65 +120,6 @@ public class LocationAccuracyHelper {
     }
 
     /**
-     * Retorna sugestões para melhorar a precisão do GPS
-     */
-    public static String getImprovementSuggestions(Context context) {
-        StringBuilder suggestions = new StringBuilder();
-
-        if (isRunningOnEmulator()) {
-            suggestions.append("DETECTADO: Você está rodando no emulador Android.\n\n");
-            suggestions.append("Para configurar sua localização real:\n\n");
-            suggestions.append("1. No Android Studio, vá em Tools > AVD Manager\n");
-            suggestions.append("2. Clique nos '...' do seu emulador e selecione 'Extended controls'\n");
-            suggestions.append("3. Vá na seção 'Location' no menu lateral\n");
-            suggestions.append("4. Digite suas coordenadas reais ou use 'Search' para encontrar sua cidade\n");
-            suggestions.append("5. Clique em 'Send' para aplicar a nova localização\n\n");
-            suggestions.append("Alternativamente:\n");
-            suggestions.append("- Use um dispositivo físico para testes de GPS\n");
-            suggestions.append("- Configure GPS mock location apps no emulador");
-        } else {
-            suggestions.append("Para melhorar a precisão do GPS:\n\n");
-            suggestions.append("1. Certifique-se de estar ao ar livre com céu aberto\n");
-            suggestions.append("2. Aguarde alguns minutos para o GPS se calibrar\n");
-            suggestions.append("3. Verifique se o modo 'Alta precisão' está ativado\n");
-            suggestions.append("4. Reinicie o GPS desligando e ligando novamente\n");
-            suggestions.append("5. Limpe o cache do Google Play Services\n");
-            suggestions.append("6. Evite áreas com muitos prédios altos ou cobertura densa");
-        }
-
-        return suggestions.toString();
-    }
-
-    /**
-     * Log detalhado da localização para debug
-     */
-    public static void logLocationDetails(Location location, String source) {
-        if (location == null) {
-            Log.w(TAG, source + ": Localização é null");
-            return;
-        }
-
-        long age = System.currentTimeMillis() - location.getTime();
-        LocationQuality quality = evaluateLocationQuality(location);
-
-        String emulatorInfo = isRunningOnEmulator() ? " [EMULADOR]" : " [DISPOSITIVO]";
-        String googleHQInfo = isGoogleHQLocation(location) ? " [GOOGLE HQ - Configure localização no emulador!]" : "";
-
-        Log.d(TAG, String.format(
-            "%s: Lat=%.6f, Lng=%.6f, Precisão=%.1fm, Idade=%ds, Qualidade=%s, Provedor=%s%s%s",
-            source,
-            location.getLatitude(),
-            location.getLongitude(),
-            location.getAccuracy(),
-            age / 1000,
-            quality.name(),
-            location.getProvider(),
-            emulatorInfo,
-            googleHQInfo
-        ));
-    }
-
-    /**
      * Verifica se duas localizações são significativamente diferentes
      */
     public static boolean isSignificantLocationChange(Location oldLocation, Location newLocation, float minimumDistance) {
@@ -190,13 +131,50 @@ public class LocationAccuracyHelper {
         return distance >= minimumDistance;
     }
 
-    public enum LocationQuality {
-        EXCELLENT,    // ±5m
-        GOOD,         // ±10m
-        FAIR,         // ±20m
-        POOR,         // ±50m
-        VERY_POOR,    // >50m
-        OUTDATED,     // Muito antiga
-        NO_LOCATION   // Nenhuma localização
+    /**
+     * Faz log detalhado de uma localização para debug
+     */
+    public static void logLocationDetails(Location location, String context) {
+        if (location == null) {
+            Log.d(TAG, context + ": Localização nula");
+            return;
+        }
+
+        LocationQuality quality = evaluateLocationQuality(location);
+        long age = System.currentTimeMillis() - location.getTime();
+
+        Log.d(TAG, String.format("%s: Lat=%.6f, Lng=%.6f, Precisão=%.1fm, Idade=%ds, Qualidade=%s",
+                context,
+                location.getLatitude(),
+                location.getLongitude(),
+                location.getAccuracy(),
+                age / 1000,
+                quality.name()
+        ));
+    }
+
+    /**
+     * Gera sugestões para melhorar a precisão do GPS
+     */
+    public static String generateGPSImprovementSuggestions(Context context) {
+        StringBuilder suggestions = new StringBuilder();
+
+        suggestions.append("Para melhorar a precisão do GPS:\n\n");
+        suggestions.append("1. Certifique-se de estar em área aberta\n");
+        suggestions.append("2. Aguarde alguns minutos para estabilizar\n");
+        suggestions.append("3. Mantenha o GPS em 'Alta precisão'\n");
+        suggestions.append("4. Reinicie o GPS se necessário\n");
+        suggestions.append("5. Verifique se há atualizações do sistema\n");
+
+        if (isRunningOnEmulator()) {
+            suggestions.append("\nDETECTADO: Você está rodando no emulador Android.\n\n");
+            suggestions.append("Para configurar sua localização real:\n");
+            suggestions.append("1. No Android Studio, vá em Tools > AVD Manager\n");
+            suggestions.append("2. Clique nos '...' do seu emulador e selecione 'Extended controls'\n");
+            suggestions.append("3. Vá na seção 'Location' no menu lateral\n");
+            suggestions.append("4. Digite suas coordenadas reais ou use 'Search' para encontrar sua cidade\n");
+        }
+
+        return suggestions.toString();
     }
 }
